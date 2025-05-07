@@ -57,32 +57,32 @@ namespace WooToDynConnector.Controllers
             return res.IsSuccessStatusCode;
         }
 
-        //private async Task<bool> PostOrderToBusinessCentral(WooOrder order)
-        //{
-        //    var payload = new
-        //    {
-        //        externalOrderId = order.Id,
-        //        customerNo = order.CustomerId.ToString(),
-        //        orderDate = order.DateCreated.ToString("yyyy-MM-dd"),
-        //        lines = order.LineItems.Select(x => new
-        //        {
-        //            itemNo = x.Sku,
-        //            quantity = x.Quantity,
-        //            unitPrice = x.Price
-        //        })
-        //    };
+        private async Task<bool> PostOrderToBusinessCentral(WooOrder order)
+        {
+            var payload = new
+            {
+                externalOrderId = order.Id,
+                customerNo = order.CustomerId.ToString(),
+                orderDate = order.DateCreated.ToString("yyyy-MM-dd"),
+                lines = order.LineItems.Select(x => new
+                {
+                    itemNo = x.Sku,
+                    quantity = x.Quantity,
+                    unitPrice = x.Price
+                })
+            };
 
-        //    var json = JsonConvert.SerializeObject(payload);
-        //    var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var json = JsonConvert.SerializeObject(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        //    var client = new HttpClient();
-        //    client.DefaultRequestHeaders.Authorization =
-        //        new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("username:password")));
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("username:password")));
 
-        //    var url = "https://yourbc/api/yourcompany/orders/v1.0/SalesOrders";
-        //    var res = await client.PostAsync(url, content);
+            var url = "https://yourbc/api/yourcompany/orders/v1.0/SalesOrders";
+            var res = await client.PostAsync(url, content);
 
-        //    return res.IsSuccessStatusCode;
-        //}
+            return res.IsSuccessStatusCode;
+        }
     }
 }
