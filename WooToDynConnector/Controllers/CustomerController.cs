@@ -19,6 +19,8 @@ namespace WooToDynConnector.Controllers
         [Route("api/customers")]
         public class CustomerController : ControllerBase
         {
+            //This Task is creating an endpoint for receiving the WooCommerce customers. This endpoint is used in the webhook creation at WooCommerce.
+            //It receives the data in Json format from WooCommerce and the calls the Task to post it to Business Central.
             [HttpPost("receive")]
             public async Task<IActionResult> ReceiveWooCustomer([FromBody] JObject orderJson)
             {
@@ -30,6 +32,8 @@ namespace WooToDynConnector.Controllers
             return StatusCode(500, "Failed to push customer to BC");
         }
 
+            //This Task posts a WooCommerce customer to Business Central. It ensures that the Json Object String sent to BC is in the correct format.
+            //Also it takes into account the two versions of Business Central authentications that are used in the project.
             private async Task<bool> PostCustomerToBusinessCentral(WooCustomer customer)
             {
             var customerJsonString = JsonConvert.SerializeObject(new

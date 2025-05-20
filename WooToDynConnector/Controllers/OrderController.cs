@@ -14,6 +14,8 @@ namespace WooToDynConnector.Controllers
     [Route("api/orders")]
     public class OrderController : ControllerBase
     {
+        //This Task is creating an endpoint for receiving the WooCommerce orders. This endpoint is used in the webhook creation at WooCommerce.
+        //It receives the data in Json format from WooCommerce and the calls the Task to post it to Business Central.
         [HttpPost("receive")]
         public async Task<IActionResult> ReceiveWooOrder([FromBody] JObject orderJson)
         {
@@ -25,6 +27,8 @@ namespace WooToDynConnector.Controllers
             return StatusCode(500, "Failed to push to BC");
         }
 
+        //This Task posts a WooCommerce order to Business Central. It ensures that the Json Object String sent to BC is in the correct format.
+        //Also it takes into account the two versions of Business Central authentications that are used in the project.
         [HttpPost("create")]
         public async Task<bool> PostOrderToBusinessCentral(WooOrder order)
         {
@@ -52,7 +56,6 @@ namespace WooToDynConnector.Controllers
                     UseDefaultCredentials = true,
                     PreAuthenticate = true
                 };
-
                 using (var client = new HttpClient(handler))
                 {
                     var url = "http://localhost:7048/BC170/ODataV4/CreateSalesOrder_CreateOrder?company=CRONUS%20UK%20Ltd.";
@@ -67,14 +70,10 @@ namespace WooToDynConnector.Controllers
                     }
                 }
             }
-            catch (HttpRequestException ex)
-            {
-                tryBasicAuth = true;
-            }
+            catch (HttpRequestException ex) {tryBasicAuth = true;}
 
             if (tryBasicAuth)
             {
-                // 2. Prøv Basic Auth
                 using (var client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Authorization =
@@ -87,11 +86,8 @@ namespace WooToDynConnector.Controllers
                     return res.IsSuccessStatusCode;
                 }
             }
-
             return false;
         }
-
-
     }
 }
 

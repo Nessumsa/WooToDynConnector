@@ -5,6 +5,8 @@ namespace WooToDynConnector.Models
 {
     public class WooCustomer
     {
+        //This class contains multiple variables that can be fetched from WooCommerce and used for customer creation in Business Central.
+        //Each variable has a JsonProperty which corresponds to the respective variable in the received Json Object.
         [JsonProperty("id")]
         public int? WooCommerceId { get; set; }
         [JsonProperty("first_name")]
@@ -21,10 +23,5 @@ namespace WooToDynConnector.Models
         public string? Postcode { get; set; }
         [JsonProperty("country")]
         public string? Country { get; set; }
-
-        public override string ToString()
-        {
-            return $"WooCommerceId: {WooCommerceId}, Name: {Name}, Email: {Email}, PhoneNo:{PhoneNo}, Address: {Address}, City: {City}, Postcode: {Postcode}, Country: {Country} "+Environment.NewLine;
-        }
     }
 }
