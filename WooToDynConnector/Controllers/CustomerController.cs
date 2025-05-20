@@ -63,6 +63,7 @@ namespace WooToDynConnector.Controllers
 
                 using (var client = new HttpClient(handler))
                 {
+                    //This must match the exposed web service from the respective Business Central client.
                     var url = "http://localhost:7048/BC170/ODataV4/CreateCustomer_InsertCustomerWS?company=CRONUS%20UK%20Ltd.";
                     var res = await client.PostAsync(url, content);
 
@@ -82,13 +83,13 @@ namespace WooToDynConnector.Controllers
 
             if (tryBasicAuth)
             {
-                // 2. Prøv Basic Auth
                 using (var client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Authorization =
                         new AuthenticationHeaderValue("Basic", Convert.ToBase64String(
                             Encoding.UTF8.GetBytes("admin:Password")));
 
+                    //This must match the exposed web service from the respective Business Central client.
                     var url = "http://bc-container:7048/BC/ODataV4/CreateCustomer_InsertCustomerWS?company=CRONUS%20Danmark%20A%2FS";
                     var res = await client.PostAsync(url, content);
 
