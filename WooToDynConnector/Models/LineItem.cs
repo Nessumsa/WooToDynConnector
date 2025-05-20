@@ -1,14 +1,19 @@
-﻿namespace WooToDynConnector.Models
+﻿using Newtonsoft.Json;
+
+namespace WooToDynConnector.Models
 {
     public class LineItem
     {
-        public string Sku { get; set; }
-        public int Quantity { get; set; }
-        public float Price { get; set; }
+        [JsonProperty("product_id")]
+        public string? ItemNo { get; set; }
+        [JsonProperty("quantity")]
+        public int? Quantity { get; set; }
+        [JsonProperty("price")]
+        public float? Price { get; set; }
 
         public override string ToString()
         {
-            return $"Sku: {Sku}, Quantity: {Quantity}, Price: {Price}";
+            return $"ItemNo: {ItemNo}, Quantity: {Quantity}, Price: {Price}";
         }
     }
 }

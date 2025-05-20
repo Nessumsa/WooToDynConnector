@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using WooToDynConnector.Models;
 using System.IO;
+using System.Diagnostics;
 
 namespace WooToDynConnector.Controllers
 {
@@ -18,71 +19,86 @@ namespace WooToDynConnector.Controllers
         {
             var wooOrder = orderJson.ToObject<WooOrder>();
 
-            System.IO.File.AppendAllText("C:\\Users\\Ronnie\\Documents\\testLog.txt", wooOrder.ToString());
-
-            var success = await PostStudentInsert(wooOrder.Id.ToString());
+            var success = await PostOrderToBusinessCentral(wooOrder);
             if (success)
                 return Ok();
-            return StatusCode(200, "OK");
-            
-            //var success = await PostOrderToBusinessCentral(wooOrder);
-            //if (success)
-            //    return Ok();
-            //return StatusCode(500, "Failed to push order to BC");
+            return StatusCode(500, "Failed to push to BC");
         }
 
-        [HttpPost("testBC")]
-        public async Task<bool> PostStudentInsert(string name)
+        [HttpPost("create")]
+        public async Task<bool> PostOrderToBusinessCentral(WooOrder order)
         {
-            var payload = new
+            var orderJsonAsString = JsonConvert.SerializeObject(new
             {
-                Student_no = "444",
-                First_Name = name,
-                Last_Name = "Doe",
-                Birthday = "2000-01-01",
-                Education = "DMU",
-                Phone_no = "12345678"
-            };
-
-            var json = JsonConvert.SerializeObject(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:Password")));
-
-            var url = "http://bc-container:7048/BC/ODataV4/Company('CRONUS%20Danmark%20A%2FS')/StudentOData";
-            var res = await client.PostAsync(url, content);
-
-            return res.IsSuccessStatusCode;
-        }
-
-        private async Task<bool> PostOrderToBusinessCentral(WooOrder order)
-        {
-            var payload = new
-            {
-                externalOrderId = order.Id,
-                customerNo = order.CustomerId.ToString(),
-                orderDate = order.DateCreated.ToString("yyyy-MM-dd"),
-                lines = order.LineItems.Select(x => new
+                WooOrderId = order.Id,
+                WooCommerceCustomerId = order.CustomerId,
+                LineItems = order.LineItems?.Select(x => new
                 {
-                    itemNo = x.Sku,
-                    quantity = x.Quantity,
-                    unitPrice = x.Price
+                    ItemNo = x.ItemNo,
+                    Quantity = x.Quantity
                 })
-            };
+            });
 
+            var payload = new { orderJson = orderJsonAsString };
             var json = JsonConvert.SerializeObject(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("username:password")));
+            bool tryBasicAuth = false;
 
-            var url = "https://yourbc/api/yourcompany/orders/v1.0/SalesOrders";
-            var res = await client.PostAsync(url, content);
+            // 1. Prøv DefaultCredentials
+            try
+            {
+                var handler = new HttpClientHandler
+                {
+                    UseDefaultCredentials = true,
+                    PreAuthenticate = true
+                };
 
-            return res.IsSuccessStatusCode;
+                using (var client = new HttpClient(handler))
+                {
+                    var url = "http://localhost:7048/BC170/ODataV4/CreateSalesOrder_CreateOrder?company=CRONUS%20UK%20Ltd.";
+                    var res = await client.PostAsync(url, content);
+
+                    Debug.WriteLine($"DefaultCredentials Status: {res.StatusCode}");
+
+                    if (res.IsSuccessStatusCode)
+                        return true;
+
+                    if ((int)res.StatusCode == 401 || (int)res.StatusCode == 403)
+                    {
+                        Debug.WriteLine("DefaultCredentials autoriseringsfejl – forsøger Basic Auth...");
+                        tryBasicAuth = true;
+                    }
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Debug.WriteLine("Netværksfejl ved brug af DefaultCredentials: " + ex.Message);
+                tryBasicAuth = true;
+            }
+
+            if (tryBasicAuth)
+            {
+                // 2. Prøv Basic Auth
+                using (var client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Basic", Convert.ToBase64String(
+                            Encoding.UTF8.GetBytes("admin:Password")));
+
+                    var url = "http://bc-container:7048/BC/ODataV4/CreateSalesOrder_CreateOrder?company=CRONUS%20Danmark%20A%2FS";
+                    var res = await client.PostAsync(url, content);
+
+                    Debug.WriteLine($"Basic Auth Status: {res.StatusCode}");
+
+                    return res.IsSuccessStatusCode;
+                }
+            }
+
+            return false;
         }
+
+
     }
 }
+

@@ -4,14 +4,18 @@ namespace WooToDynConnector.Models
 {
     public class WooOrder
     {
-        public int Id { get; set; }
-        public int CustomerId { get; set; }
-        public DateTime DateCreated { get; set; }
-        public List<LineItem> LineItems { get; set; }
+        [JsonProperty("id")]
+        public string? Id { get; set; }
+        [JsonProperty("customer_id")]
+        public string? CustomerId { get; set; }
+        [JsonProperty("date_created")]
+        public DateTime? DateCreated { get; set; }
+        [JsonProperty("line_items")]
+        public List<LineItem>? LineItems { get; set; } = new List<LineItem>();
 
         public override string ToString()
         {
-            return $"ID: {Id}, CustomerID: {CustomerId}, Date: {DateCreated}" + Environment.NewLine;
+            return $"ID: {Id}, CustomerID: {CustomerId}, Date: {DateCreated} + Line Items: {LineItems?[0].ToString()} | {LineItems?[1].ToString()}" + Environment.NewLine;
         }
     }
 }

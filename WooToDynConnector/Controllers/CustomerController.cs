@@ -32,13 +32,11 @@ namespace WooToDynConnector.Controllers
             return StatusCode(500, "Failed to push customer to BC");
         }
 
-
-
-
             private async Task<bool> PostCustomerToBusinessCentral(WooCustomer customer)
             {
             var customerJsonString = JsonConvert.SerializeObject(new
             {
+                WooCommerceId = customer.WooCommerceId,
                 Name = customer.Name,
                 Email = customer.Email
             });
@@ -58,25 +56,7 @@ namespace WooToDynConnector.Controllers
 
             var url = "http://bc-container:7048/BC/ODataV4/CreateCustomer_InsertCustomerWS?company=CRONUS%20Danmark%20A%2FS";
             var res = await client.PostAsync(url, content);
-
-            if (!res.IsSuccessStatusCode)
-            {
-                var handler = new HttpClientHandler
-                {
-                    UseDefaultCredentials = true
-                };
-                client = new HttpClient(handler);
-                using (client)
-                {
-                    client.DefaultRequestHeaders.Accept.Add(
-                        new MediaTypeWithQualityHeaderValue("application/json"));
-                }
-                url = "http://localhost:7048/BC170/ODataV4/NewCustomerWS_InsertCustomerWS?company=CRONUS%20UK%20Ltd";
-                res = await client.PostAsync(url, content);
-            }
-
             return res.IsSuccessStatusCode;
-            }
         }
-    
+    }
 }
