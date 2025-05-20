@@ -45,7 +45,6 @@ namespace WooToDynConnector.Controllers
 
             bool tryBasicAuth = false;
 
-            // 1. Prøv DefaultCredentials
             try
             {
                 var handler = new HttpClientHandler
@@ -59,21 +58,17 @@ namespace WooToDynConnector.Controllers
                     var url = "http://localhost:7048/BC170/ODataV4/CreateSalesOrder_CreateOrder?company=CRONUS%20UK%20Ltd.";
                     var res = await client.PostAsync(url, content);
 
-                    Debug.WriteLine($"DefaultCredentials Status: {res.StatusCode}");
-
                     if (res.IsSuccessStatusCode)
                         return true;
 
                     if ((int)res.StatusCode == 401 || (int)res.StatusCode == 403)
                     {
-                        Debug.WriteLine("DefaultCredentials autoriseringsfejl – forsøger Basic Auth...");
                         tryBasicAuth = true;
                     }
                 }
             }
             catch (HttpRequestException ex)
             {
-                Debug.WriteLine("Netværksfejl ved brug af DefaultCredentials: " + ex.Message);
                 tryBasicAuth = true;
             }
 
@@ -88,8 +83,6 @@ namespace WooToDynConnector.Controllers
 
                     var url = "http://bc-container:7048/BC/ODataV4/CreateSalesOrder_CreateOrder?company=CRONUS%20Danmark%20A%2FS";
                     var res = await client.PostAsync(url, content);
-
-                    Debug.WriteLine($"Basic Auth Status: {res.StatusCode}");
 
                     return res.IsSuccessStatusCode;
                 }

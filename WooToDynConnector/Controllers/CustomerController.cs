@@ -24,8 +24,6 @@ namespace WooToDynConnector.Controllers
             {
                 var wooCustomer = orderJson.ToObject<WooCustomer>();
 
-                System.IO.File.AppendAllText("C:\\Users\\Ronnie\\Documents\\testCustomerLog.txt", wooCustomer.ToString());
-
             var success = await PostCustomerToBusinessCentral(wooCustomer);
             if (success)
                 return Ok();
@@ -49,14 +47,52 @@ namespace WooToDynConnector.Controllers
             var json = JsonConvert.SerializeObject(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+            bool tryBasicAuth = false;
 
-            var client = new HttpClient();
-                client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:Password")));
+            try
+            {
+                var handler = new HttpClientHandler
+                {
+                    UseDefaultCredentials = true,
+                    PreAuthenticate = true
+                };
 
-            var url = "http://bc-container:7048/BC/ODataV4/CreateCustomer_InsertCustomerWS?company=CRONUS%20Danmark%20A%2FS";
-            var res = await client.PostAsync(url, content);
-            return res.IsSuccessStatusCode;
+                using (var client = new HttpClient(handler))
+                {
+                    var url = "http://localhost:7048/BC170/ODataV4/CreateCustomer_InsertCustomerWS?company=CRONUS%20UK%20Ltd.";
+                    var res = await client.PostAsync(url, content);
+
+                    if (res.IsSuccessStatusCode)
+                        return true;
+
+                    if ((int)res.StatusCode == 401 || (int)res.StatusCode == 403)
+                    {
+                        tryBasicAuth = true;
+                    }
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                tryBasicAuth = true;
+            }
+
+            if (tryBasicAuth)
+            {
+                // 2. Prøv Basic Auth
+                using (var client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Basic", Convert.ToBase64String(
+                            Encoding.UTF8.GetBytes("admin:Password")));
+
+                    var url = "http://bc-container:7048/BC/ODataV4/CreateCustomer_InsertCustomerWS?company=CRONUS%20Danmark%20A%2FS";
+                    var res = await client.PostAsync(url, content);
+
+                    return res.IsSuccessStatusCode;
+                }
+            }
+
+            return false;
         }
     }
 }
