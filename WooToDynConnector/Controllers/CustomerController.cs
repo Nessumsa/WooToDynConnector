@@ -64,7 +64,7 @@ namespace WooToDynConnector.Controllers
                 using (var client = new HttpClient(handler))
                 {
                     //This must match the exposed web service from the respective Business Central client.
-                    var url = "http://localhost:7048/BC170/ODataV4/CreateCustomer_InsertCustomerWS?company=CRONUS%20UK%20Ltd.";
+                    var url = "http://localhost:7048/BC170/ODataV4/NewCustomerWS_InsertCustomerWS?company=CRONUS%20UK%20Ltd.";
                     var res = await client.PostAsync(url, content);
 
                     if (res.IsSuccessStatusCode)
